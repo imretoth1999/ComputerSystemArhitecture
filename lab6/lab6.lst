@@ -1,0 +1,36 @@
+     1                                  ;Se da un sir de octeti s. Sa se construiasca sirul de octeti d, care contine pe fiecare pozitie numarul de biti 1 ai octetului de pe pozitia corespunzatoare din s.
+     2                                  bits 32 
+     3                                  global start        
+     4                                  extern exit,printf ; tell nasm that exit exists even if we won't be defining it
+     5                                  import exit msvcrt.dll ; exit is a function that ends the calling process. It is defined in msvcrt.dll
+     6                                  import printf msvcrt.dll
+     7                                  ; msvcrt.dll contains exit, printf and all the other important C-runtime specific functions
+     8                                  ; our data is declared here (the variables needed by our program)
+     9                                  segment data use32 class=data
+    10 00000000 03070001                	s db 11b,111b,0b,1b ; declararea sirului initial s
+    11                                  	l equ $-s ; stabilirea lungimea sirului initial l
+    12 00000004 00<rept>                	d times l db 0 ; rezervarea unui spatiu de dimensiune l pentru sirul destinatie d si initializarea acestuia
+    13                                  
+    14                                  segment code use32 class=code
+    15                                  start:
+    16 00000000 B800000000                  mov EAX,0
+    17 00000005 BA00000000                  mov EDX,0
+    18 0000000A B904000000                  mov ECX,l;we put the lenght in L
+    19                                         ; mov ax, data
+    20                                       ; this is the source string 
+    21                                    ;  lea di,res ; this is the destination string 
+    22 0000000F BE[00000000]                mov ESI,s;we move s into esi 
+    23                                  
+    24                                    ;  mov EBX,0
+    25                                     ; check:
+    26                                      ;    mov EDX,0; we enoty edx
+    27                                       ;   lodsb ;we ge the number
+    28                                        ;  
+    29                                         ; POPCNT EDX,EAX;we find the number of ones
+    30                                         ; mov [d+EBX],EDX ;we move into the new vector the number
+    31                                         ; inc EBX ;we increment ebx
+    32                                          
+    33                                      ;loop check;we loop
+    34 00000014 B804000000                  mov EAX,10b+10b
+    35 00000019 6A00                        push dword 0 ; push the parameter for exit onto the stack
+    36 0000001B FF15[00000000]          	call [exit] ; call exit to terminate the program

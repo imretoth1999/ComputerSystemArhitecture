@@ -1,0 +1,38 @@
+     1                                  ;(a+b)-(a+d)+(c-a)
+     2                                  bits 32 ;assembling for the 32 bits architecture
+     3                                  ; the start label will be the entry point in the program
+     4                                  global  start 
+     5                                  extern  exit ; we inform the assembler that the exit symbol is foreign, i.e. it exists even if we won't be defining it
+     6                                  
+     7                                  import  exit msvcrt.dll; exit is a function that ends the process, it is defined in msvcrt.dll
+     8                                          ; msvcrt.dll contains exit, printf and all the other important C-runtime functions
+     9                                  segment  data use32 class=data ; the data segment where the variables are declared 
+    10 00000000 0A                      	a  db 10
+    11 00000001 1400                    	b  dw 20
+    12 00000003 32000000                    c  dd 50
+    13 00000007 0500000000000000            d  dq 5 
+    14                                  segment  code use32 class=code ; code segment
+    15                                  start:
+    16 00000000 B800000000                  mov EAX,0;we empty EAX
+    17 00000005 A0[00000000]                mov AL,[a]; A goes into AL
+    18 0000000A 660305[01000000]            add AX,[b] ;AX = a + b 
+    19 00000011 BB00000000                  mov EBX,0; we empty EBX
+    20 00000016 B900000000                  mov ECX,0;we empty ECX
+    21 0000001B 89C1                        mov ECX,EAX;we move EAX into ECX
+    22 0000001D B800000000                  mov EAX,0;we make EAX 0
+    23 00000022 BA00000000                  mov EDX,0;we make EDX 0
+    24 00000027 A0[00000000]                mov AL,[a];we move a into AL
+    25 0000002C 0305[07000000]              add EAX,dword[d];we add EAX with D
+    26 00000032 1315[0B000000]              adc EDX,dword[d+4] ; we add the carry flag
+    27 00000038 29C1                        sub ECX,EAX;we subtract ECX from EAX
+    28 0000003A 19D3                        sbb EBX,EDX;we subtract with borrow
+    29 0000003C BA00000000                  mov EDX,0;we empty EDX
+    30 00000041 B800000000                  mov EAX,0;we empty EAX
+    31 00000046 8B15[03000000]              mov EDX,[c];we ADD EDX to c
+    32 0000004C B800000000                  mov EAX,0;WE make eax empty
+    33 00000051 A0[00000000]                mov AL,[a] ;we move a into AL
+    34 00000056 29C2                        sub EDX,EAX ;we subtrawct 
+    35 00000058 01D1                        add ECX,EDX ;we add 
+    36 0000005A 83D300                      adc EBX,0;we add with carry
+    37 0000005D 6A00                        push dword 0
+    38 0000005F FF15[00000000]              call [exit]

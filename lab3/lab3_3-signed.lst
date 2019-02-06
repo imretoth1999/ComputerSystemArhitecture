@@ -1,0 +1,49 @@
+     1                                  ;x+a/b+c*d-b/c+e; a,b,d-byte; c-word; e-doubleword; x-qword 
+     2                                  bits 32 ;assembling for the 32 bits architecture
+     3                                  ; the start label will be the entry point in the program
+     4                                  global  start 
+     5                                  extern  exit ; we inform the assembler that the exit symbol is foreign, i.e. it exists even if we won't be defining it
+     6                                  
+     7                                  import  exit msvcrt.dll; exit is a function that ends the process, it is defined in msvcrt.dll
+     8                                          ; msvcrt.dll contains exit, printf and all the other important C-runtime functions
+     9                                  segment  data use32 class=data ; the data segment where the variables are declared 
+    10 00000000 28                      	a  db 40
+    11 00000001 14                      	b  db 20
+    12 00000002 F6                          d  db -10
+    13 00000003 0A00                        c dw 10
+    14 00000005 E2FFFFFF                    e dd -30
+    15 00000009 F6FFFFFFFFFFFFFF            x dq -10
+    16                                  segment  code use32 class=code ; code segment
+    17                                  start:
+    18 00000000 B800000000                  mov EAX,0;we empty EAX EAX=00000000h
+    19 00000005 BB00000000                  mov EBX,0;we empty EBX=00000000h
+    20 0000000A A0[00000000]                mov AL,[a] ;we add a into all EAX = 00000028h
+    21 0000000F 6698                        cbw;we convert it to word EAX= 00000028h
+    22 00000011 F63D[01000000]              idiv byte [b];we divide by byte b EAX=00000002h
+    23 00000017 6699                        cwd
+    24 00000019 99                          cdq;EAX=00000002h EDX=00000000h
+    25 0000001A 0305[09000000]              add EAX,dword[x];we add the first half to eax;EAX=FFFFFFF8h
+    26 00000020 1315[0D000000]              adc EDX,dword[x+4];we add the second to edx;EDX = FFFFFFFFh
+    27 00000026 89C1                        mov ECX,EAX;we move them to ECX:EBX ECX = FFFFFFF8hh
+    28 00000028 89D3                        mov EBX,EDX;EBX = FFFFFFFFh
+    29 0000002A B800000000                  mov EAX,0;we empty
+    30 0000002F BA00000000                  mov EDX,0
+    31 00000034 A0[02000000]                mov AL,[d];we move d into al EAX=000000F6h
+    32                                     ; mov DX,[c]
+    33 00000039 6698                       cbw 
+    34 0000003B 98                         cwde;EAX=FFFFFFF6h
+    35 0000003C 66F72D[03000000]            imul word[c];we multiply with the word c EAX= FFFFFF9Ch EDX=0000FFFF
+    36 00000043 01C1                        add ECX,EAX ;we add the result ECX=FFFFFF94h
+    37 00000045 11D3                         adc EBX,EDX ;we add the results with carry EBX=0000FFFFh
+    38 00000047 B800000000                   mov EAX,0;we empty both registers
+    39 0000004C BA00000000                   mov EDX,0;we empty edx
+    40 00000051 A0[01000000]                 mov AL,[b];we move b to al; EAX=00000014h
+    41 00000056 98                           cwde;
+    42 00000057 66F73D[03000000]             idiv word [c];we divide the word
+    43 0000005E 29C1                         sub ECX,EAX ;we subtract the results ; ECX=00000002h
+    44 00000060 83DB00                       sbb EBX,0 ;we subtract with borrow EBX=0000FFFFh
+    45 00000063 030D[05000000]               add ECX,[e];we add e with ECX ECX=FFFFFF74h
+    46 00000069 83D300                       adc EBX,0;we add with carry EBX=00010000h
+    47                                  
+    48 0000006C 6A00                        push dword 0
+    49 0000006E FF15[00000000]              call [exit]

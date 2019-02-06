@@ -1,0 +1,30 @@
+     1                                  ;[2*(a+b)-5*c]*(d-3)
+     2                                  bits 32 ;assembling for the 32 bits architecture
+     3                                  ; the start label will be the entry point in the program
+     4                                  global  start 
+     5                                  extern  exit ; we inform the assembler that the exit symbol is foreign, i.e. it exists even if we won't be defining it
+     6                                  
+     7                                  import  exit msvcrt.dll; exit is a function that ends the process, it is defined in msvcrt.dll
+     8                                          ; msvcrt.dll contains exit, printf and all the other important C-runtime functions
+     9                                  segment  data use32 class=data ; the data segment where the variables are declared 
+    10 00000000 0A                      	a  db 10
+    11 00000001 28                      	b  db 40
+    12 00000002 0A                          c  db 10
+    13 00000003 1700                        d  dw 23
+    14                                  segment  code use32 class=code ; code segment
+    15                                  start:
+    16 00000000 A0[00000000]                mov AL,[a];we move a into AL
+    17 00000005 0205[01000000]              add AL,[b];we add a with b
+    18 0000000B B102                        mov CL,2;we memorise 2 in CL
+    19 0000000D F6E1                        mul CL;we multiply AL with 2 
+    20 0000000F 88C3                        mov BL,AL ; we move AL into bl 
+    21 00000011 66A1[02000000]              mov AX,[c];we move C into ax 
+    22 00000017 66B90500                    mov CX,5;we move into cx 5
+    23 0000001B 66F7E1                      mul CX;we multiply ax(c) with 5(being CX)
+    24 0000001E 28C3                        sub BL,AL;we substract the 2 multiplications
+    25 00000020 88D8                        mov AL,BL  ;we move the value into AL
+    26 00000022 8A1D[03000000]              mov BL,[d];we move into BL the value of D
+    27 00000028 80EB03                      sub BL,3;we subtract d with 3 
+    28 0000002B F6E3                        mul BL;we multiply AL with BL getting the computation
+    29 0000002D FF3500000000                push dword [0]
+    30 00000033 FF15[00000000]              call [exit]

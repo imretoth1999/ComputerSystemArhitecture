@@ -1,0 +1,90 @@
+     1                                  ;avem un text si scriem in fisier numai vocalele 
+     2                                  bits 32 
+     3                                  
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit, fopen, fprintf, fclose
+     8                                  import exit msvcrt.dll  
+     9                                  import fopen msvcrt.dll  
+    10                                  import fprintf msvcrt.dll
+    11                                  import fclose msvcrt.dll
+    12                                  
+    13                                  ; our data is declared here (the variables needed by our program)
+    14                                  segment data use32 class=data
+    15 00000000 446F75612070756E63-         text db "Doua puncte in plus va rog", 0    ; textul care va fi scris in fisier
+    15 00000009 746520696E20706C75-
+    15 00000012 7320766120726F6700 
+    16                                  	l equ $-text ; stabilirea lungimea sirului initial l
+    17 0000001B 00<rept>                	d times 100 db 0 ; rezervarea unui spatiu de dimensiune l pentru sirul destinatie d si initializarea acestuia
+    18                                  
+    19 0000007F 616E612E74787400            nume_fisier db "ana.txt", 0  ; numele fisierului care va fi creat
+    20 00000087 7700                        mod_acces db "w", 0          ; modul de deschidere a fisierului - 
+    21                                                                   ; w - pentru scriere. daca fiserul nu exista, se va crea      
+    22                                                                          
+    23 00000089 FFFFFFFF                    descriptor_fis dd -1         ; variabila in care vom salva descriptorul fisierului - necesar pentru a putea face referire la fisier
+    24                                                                      
+    25                                  ; our code starts here
+    26                                  segment code use32 class=code
+    27                                      start:
+    28                                          ; apelam fopen pentru a crea fisierul
+    29                                          ; functia va returna in EAX descriptorul fisierului sau 0 in caz de eroare
+    30                                          ; eax = fopen(nume_fisier, mod_acces)
+    31 00000000 68[87000000]                    push dword mod_acces     
+    32 00000005 68[7F000000]                    push dword nume_fisier
+    33 0000000A FF15[00000000]                  call [fopen]
+    34 00000010 83C408                          add esp, 4*2                ; eliberam parametrii de pe stiva
+    35 00000013 BA00000000                      mov EDX,0
+    36 00000018 A3[89000000]                    mov [descriptor_fis], eax   ; salvam valoarea returnata de fopen in variabila descriptor_fis
+    37                                          
+    38 0000001D 83F800                          cmp eax, 0
+    39 00000020 7466                            je final
+    40 00000022 B91B000000                      mov ECX,l
+    41 00000027 BE[00000000]                    mov esi,text
+    42                                          check:
+    43 0000002C B800000000                      mov EAX,0
+    44 00000031 AC                              lodsb
+    45 00000032 3C61                            cmp AL,'a'
+    46 00000034 7426                            je rr 
+    47 00000036 3C41                            cmp AL,'A'
+    48 00000038 7422                            je rr 
+    49 0000003A 3C65                            cmp AL,'e'
+    50 0000003C 741E                            je rr 
+    51 0000003E 3C45                            cmp AL,'E'
+    52 00000040 741A                            je rr 
+    53 00000042 3C69                            cmp AL,'i'
+    54 00000044 7416                            je rr
+    55 00000046 3C49                            cmp AL,'I'
+    56 00000048 7412                            je rr
+    57 0000004A 3C6F                            cmp AL,'o'
+    58 0000004C 740E                            je rr
+    59 0000004E 3C4F                            cmp AL,'O'
+    60 00000050 740A                            je rr
+    61 00000052 3C75                            cmp AL,'u'
+    62 00000054 7406                            je rr
+    63 00000056 3C55                            cmp AL,'U'
+    64 00000058 7402                            je rr 
+    65 0000005A EB07                            jmp no
+    66                                          
+    67                                          rr:
+    68 0000005C 8982[1B000000]                  mov [d+edx], EAX
+    69 00000062 42                              inc edx 
+    70                                  
+    71                                          no:
+    72 00000063 E2C7                            loop check
+    73 00000065 68[1B000000]                    push dword d
+    74 0000006A FF35[89000000]                  push dword [descriptor_fis]
+    75 00000070 FF15[00000000]                  call [fprintf]
+    76 00000076 83C408                          add esp, 4*2
+    77                                          
+    78                                          ; apelam functia fclose pentru a inchide fisierul
+    79                                          ; fclose(descriptor_fis)
+    80 00000079 FF35[89000000]                  push dword [descriptor_fis]
+    81 0000007F FF15[00000000]                  call [fclose]
+    82 00000085 83C404                          add esp, 4
+    83                                          
+    84                                        final:
+    85                                          
+    86                                          ; exit(0)
+    87 00000088 6A00                            push    dword 0      
+    88 0000008A FF15[00000000]                  call    [exit]       

@@ -1,0 +1,96 @@
+     1                                  ;avem un text si scriem in fisier numai vocalele 
+     2                                  bits 32 
+     3                                  
+     4                                  global start        
+     5                                  
+     6                                  ; declare external functions needed by our program
+     7                                  extern exit, fopen, fprintf, fclose, fread,printf
+     8                                  import exit msvcrt.dll  
+     9                                  import fopen msvcrt.dll  
+    10                                  import fprintf msvcrt.dll
+    11                                  import fclose msvcrt.dll
+    12                                  import fread msvcrt.dll 
+    13                                  import printf msvcrt.dll
+    14                                  
+    15                                  ; our data is declared here (the variables needed by our program)
+    16                                  segment data use32 class=data
+    17 00000000 00<rept>                	d times 100 db 0 
+    18                                  
+    19                                  
+    20 00000064 766F63616C652E7478-         nume_fisier db "vocale.txt", 0  ; numele fisierului care va fi creat
+    20 0000006D 7400               
+    21 0000006F 7200                        mod_acces db "r", 0          ; modul de deschidere a fisierului - 
+    22                                                                   ; w - pentru scriere. daca fiserul nu exista, se va crea      
+    23 00000071 00000000                    k dd 0                                        
+    24 00000075 FFFFFFFF                    descriptor_fis dd -1         ; variabila in care vom salva descriptorul fisierului - necesar pentru a putea face referire la fisier
+    25 00000079 4E756D626572206F66-         format dw "Number of odd numbers  = %d",0
+    25 00000082 206F6464206E756D62-
+    25 0000008B 65727320203D202564-
+    25 00000094 000000             
+    26                                      len equ 100                     ; numarul maxim de elemente citite din fisier intr-o etapa
+    27 00000097 <res 00000064>              buffer resb len                 ; sirul in care se va citi textul din fisier
+    28                                                                      
+    29                                  ; our code starts here
+    30                                  segment code use32 class=code
+    31                                      start:
+    32                                  
+    33 00000000 68[6F000000]                    push dword mod_acces
+    34 00000005 68[64000000]                    push dword nume_fisier
+    35 0000000A FF15[00000000]                  call [fopen]
+    36 00000010 83C408                          add esp, 4*2;we open the file
+    37                                          
+    38 00000013 83F800                          cmp eax, 0                  ;if there was an error while reading we jump to final
+    39 00000016 0F84AC000000                    je final
+    40                                          
+    41 0000001C A3[75000000]                    mov [descriptor_fis], eax ;we move the value of the descriptor into a variable
+    42                                              
+    43                                          bucla:
+    44                                          
+    45 00000021 FF35[75000000]                      push dword [descriptor_fis]
+    46 00000027 6A01                                push dword 1
+    47 00000029 6A01                                push dword 1
+    48 0000002B 68[97000000]                        push dword buffer
+    49 00000030 FF15[00000000]                      call [fread];we read every character from the file and put it into the buffer
+    50 00000036 83C410                              add esp, 4*4
+    51 00000039 83F800                              cmp eax, 0
+    52 0000003C 7467                                je cleanup
+    53                                              
+    54 0000003E 833D[97000000]61                    cmp dword[buffer],'a'
+    55 00000045 7453                            je rr 
+    56 00000047 833D[97000000]41                cmp dword[buffer],'A'
+    57 0000004E 744A                            je rr 
+    58 00000050 833D[97000000]65                cmp dword[buffer],'e'
+    59 00000057 7441                            je rr 
+    60 00000059 833D[97000000]45                cmp dword[buffer],'E'
+    61 00000060 7438                            je rr 
+    62 00000062 833D[97000000]69                cmp dword[buffer],'i'
+    63 00000069 742F                            je rr
+    64 0000006B 833D[97000000]49                cmp dword[buffer],'I'
+    65 00000072 7426                            je rr
+    66 00000074 833D[97000000]6F                cmp dword[buffer],'o'
+    67 0000007B 741D                            je rr
+    68 0000007D 833D[97000000]4F                cmp dword[buffer],'O'
+    69 00000084 7414                            je rr
+    70 00000086 833D[97000000]75                cmp dword[buffer],'u'
+    71 0000008D 740B                            je rr
+    72 0000008F 833D[97000000]55                cmp dword[buffer],'U'
+    73 00000096 7402                            je rr 
+    74 00000098 EB87                            jmp bucla
+    75                                             
+    76 0000009A FE05[71000000]          rr:       inc byte[k]
+    77 000000A0 E97CFFFFFF              JMP bucla
+    78                                  
+    79                                        cleanup:
+    80                                        
+    81 000000A5 FF35[75000000]                  push dword [descriptor_fis]
+    82 000000AB FF15[00000000]                  call [fclose]
+    83 000000B1 83C404                          add esp, 4
+    84 000000B4 FF35[71000000]                  push dword[k]
+    85 000000BA 68[79000000]                    push dword format
+    86 000000BF FF15[00000000]                  call [printf];we call the function
+    87 000000C5 83C408                          add esp, 4 * 2    ; eliberam parametrii de pe stiva; 4 = dimensiunea unui dword; 2 = nr de parametri
+    88                                        final:
+    89                                        
+    90                                  
+    91 000000C8 6A00                            push    dword 0      
+    92 000000CA FF15[00000000]                  call    [exit]       

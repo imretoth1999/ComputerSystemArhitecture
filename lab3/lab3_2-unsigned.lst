@@ -1,0 +1,35 @@
+     1                                  ;c-(d+a)+(b+c)- unsigned 
+     2                                  bits 32 ;assembling for the 32 bits architecture
+     3                                  ; the start label will be the entry point in the program
+     4                                  global  start 
+     5                                  extern  exit ; we inform the assembler that the exit symbol is foreign, i.e. it exists even if we won't be defining it
+     6                                  
+     7                                  import  exit msvcrt.dll; exit is a function that ends the process, it is defined in msvcrt.dll
+     8                                          ; msvcrt.dll contains exit, printf and all the other important C-runtime functions
+     9                                  segment  data use32 class=data ; the data segment where the variables are declared 
+    10 00000000 0A                      	a  db 10
+    11 00000001 1400                    	b  dw 20
+    12 00000003 32000000                    c  dd 50
+    13 00000007 1400000000000000            d  dq 20 
+    14                                  segment  code use32 class=code ; code segment
+    15                                  start:
+    16 00000000 A0[00000000]                mov AL,[a];we move a to AL
+    17 00000005 B400                        mov AH,0;we make AL an word
+    18 00000007 66BA0000                    mov DX,0;now we make it as dw
+    19 0000000B 6652                        push DX;we push the pair
+    20 0000000D 6650                        push AX 
+    21 0000000F 58                          pop EAX;we pop the result
+    22 00000010 0305[07000000]              add EAX,[d];we add the result with [d]
+    23 00000016 89C3                        mov EBX,EAX;we move EAX to ebx so we can use eax once again
+    24 00000018 A1[03000000]                mov EAX,[c];we move c into eax
+    25 0000001D 29D8                        sub EAX,EBX;we subtract EBX from C
+    26 0000001F 89C3                        mov EBX,EAX;we move EAX(the result) to ebx
+    27 00000021 66A1[01000000]              mov AX,[b];we move b to ax
+    28 00000027 66BA0000                    mov DX,0;we make the pair DX:AX 
+    29 0000002B 6652                        push DX;we push the pair
+    30 0000002D 6650                        push AX 
+    31 0000002F 58                          pop EAX;we pop the result 
+    32 00000030 0305[03000000]              add EAX,[c];we add the result with c
+    33 00000036 01C3                        add EBX,EAX;we add the result with EBX and store the result in EBX
+    34 00000038 6A00                        push dword 0
+    35 0000003A FF15[00000000]              call [exit]

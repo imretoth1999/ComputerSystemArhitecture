@@ -1,0 +1,43 @@
+     1                                  ;256*1
+     2                                  ;Se da octetul A. Sa se obtina numarul intreg n reprezentat de bitii 2-4 ai lui A. Sa se obtina apoi in B octetul rezultat prin rotirea spre dreapta a lui A cu n pozitii. Sa se obtina dublucuvantul C:
+     3                                  ;bitii 8-15 ai lui C sunt 0
+     4                                  ;bitii 16-23 ai lui C coincid cu bitii lui B
+     5                                  ;bitii 24-31 ai lui C coincid cu bitii lui A
+     6                                  ;bitii 0-7 ai lui C sunt 1
+     7                                  ;result 00011111000111110000000011111111b
+     8                                  bits 32 ;asamblare si compilare pentru arhitectura de 32 biti
+     9                                  ; definim punctul de intrare in programul principal
+    10                                  global  start 
+    11                                  extern  exit ; indicam asamblorului ca exit exista, chiar daca noi nu o vom defini
+    12                                  import  exit msvcrt.dll; exit este o functie care incheie procesul, este definita in msvcrt.dll
+    13                                          ; msvcrt.dll contine exit, printf si toate celelalte functii C-runtime importante
+    14                                  segment  data use32 class=data ; segmentul de date in care se vor defini variabilele 
+    15 00000000 1F                           a db 00011111b
+    16 00000001 00                           b db 0b
+    17 00000002 00000000                     c dd 0b
+    18                                  
+    19                                  segment  code use32 class=code ; segmentul de cod
+    20                                  start:
+    21 00000000 B800000000                    mov EAX,0;EAX = 00000000h
+    22 00000005 BB00000000                    mov EBX,0;EBX = 00000000h;
+    23 0000000A B900000000                    mov ECX,0;we empty the registers ECX = 00000000h
+    24 0000000F 8A0D[00000000]                mov CL,[a];we move a into CL  ECX = 0000001Fh
+    25 00000015 80E11C                        and CL,00011100b  ;we need only the 2 -4 bytes ;CL = 1Ch
+    26 00000018 C0C902                        ror CL,2
+    27 0000001B 8A1D[00000000]                mov BL,[a];we move into BH a; EBX=0000001Fh
+    28 00000021 D2CB                          ror BL,CL ;we rotate BH with the number formet with the 2-4 bytes ; BL=F1h 
+    29 00000023 881D[01000000]                mov [b],BL ;we move the result into [b] 
+    30 00000029 A0[00000000]                  mov AL,[a] ; We put a into AL ;EAX = 0000001Fh
+    31 0000002E BB00000000                    mov EBX,0 ; we empty EBX; EBX=00000000h
+    32 00000033 8A1D[01000000]                mov BL,[b] ; we put into BL EBX=000000F1h
+    33 00000039 B900000000                    mov ECX,0;we empty ECX  ECX=00000000h
+    34 0000003E 81C9FF000000                  or ECX, 00000000000000000000000011111111b;we need first 7 to be 1 ECX= 000000FFh
+    35 00000044 81E3FF000000                  and EBX,00000000000000000000000011111111b;we take EBX EBX=000000F1h
+    36 0000004A C1C310                        rol EBX,16;we rotate it EBX=00F10000h
+    37 0000004D 09D9                          or ECX,EBX;we add it ; ECX = 00F100FFh
+    38 0000004F 25FF000000                    and EAX,00000000000000000000000011111111b;we take [a] EAX= 0000001Fh
+    39 00000054 C1C018                        rol EAX,24;we rotate it ;EAX=1F000000h
+    40 00000057 09C1                          or ECX,EAX ;we add it ECX=1FF100FFh
+    41 00000059 890D[02000000]                mov [c],ECX;we move it into [c] 
+    42 0000005F 6A00                    	push   dword 0 ;saves on stack the parameter of the function exit
+    43 00000061 FF15[00000000]          	call   [exit] ; function exit is called in order to end the execution of

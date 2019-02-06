@@ -1,0 +1,39 @@
+     1                                  ;c-(d+a)+(b+c)- signed -40 -30 = -70
+     2                                  bits 32 ;assembling for the 32 bits architecture
+     3                                  ; the start label will be the entry point in the program
+     4                                  global  start 
+     5                                  extern  exit ; we inform the assembler that the exit symbol is foreign, i.e. it exists even if we won't be defining it
+     6                                  
+     7                                  import  exit msvcrt.dll; exit is a function that ends the process, it is defined in msvcrt.dll
+     8                                          ; msvcrt.dll contains exit, printf and all the other important C-runtime functions
+     9                                  segment  data use32 class=data ; the data segment where the variables are declared 
+    10 00000000 0A                      	a  db 10
+    11 00000001 1400                    	b  dw 20
+    12 00000003 CEFFFFFF                    c  dd -50
+    13 00000007 ECFFFFFFFFFFFFFF            d  dq -20 
+    14                                  segment  code use32 class=code ; code segment
+    15                                  start:
+    16 00000000 A0[00000000]                mov AL,[a]           ;we move into AL A   
+    17 00000005 6698                        cbw                     
+    18 00000007 98                          cwde                    
+    19 00000008 99                          cdq                    ;we convert it all to quad;EDX = 
+    20 00000009 0305[07000000]              add EAX,dword[d]          ;we add the part with D
+    21 0000000F 1315[0B000000]              adc EDX,dword[d+4]           ;we add the carry flag
+    22 00000015 89C1                        mov ECX,EAX         ;we move the calculated values into EBX
+    23 00000017 89D3                        mov EBX,EDX         ;we move the other part into ECX
+    24 00000019 B800000000                  mov EAX,0   ;we empty the quad
+    25 0000001E BA00000000                  mov EDX,0       ;same
+    26 00000023 A1[03000000]                mov EAX,[c] ;we move c into EAX
+    27 00000028 29C8                        sub EAX,ECX;we subtract c from EBX
+    28 0000002A 83DA00                      sbb EDX,0;we subtract with carry flag
+    29 0000002D 89C1                        mov ECX,EAX;we move into ebx the cresults
+    30 0000002F 89D3                        mov EBX,EDX ;we moved it into the pear ECX:EBX
+    31 00000031 B800000000                  mov EAX,0;we empty EAX
+    32 00000036 66A1[01000000]              mov AX,[b] ;we add AX
+    33 0000003C 98                          cwde;we convert the w into quad
+    34 0000003D 0305[03000000]              add EAX,[c];we add the dw
+    35 00000043 BA00000000                  mov EDX,0;we empty the EDX
+    36 00000048 01C8                        add EAX,ECX;we add  EAX with eBX
+    37 0000004A 11DA                        adc EDX,EBX ;we add EDX with ecx and the carry
+    38 0000004C 6A00                        push dword 0
+    39 0000004E FF15[00000000]              call [exit]
